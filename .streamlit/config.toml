@@ -1,7 +1,9 @@
 [theme]
 base = "light"
-primaryColor = "#89CFF0"
-backgroundColor = "#E0F7FE"
-secondaryBackgroundColor = "#FFFCE4"
-textColor = "#000000"
+primaryColor = "#E4EFE7"
+backgroundColor = "#FAF1E6"
+secondaryBackgroundColor = "#FDFAF6"
+textColor = "#064420"
 font = "sans serif"
+
+## https://colorhunt.co/palette/faf1e6fdfaf6e4efe7064420
