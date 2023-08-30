@@ -28,44 +28,77 @@ user_api_key = utils.load_api_key()
 
 sidebar.about()
 
-if not user_api_key:
-    layout.show_api_key_missing()
+def main():
+    if not user_api_key:
+        layout.show_api_key_missing()
 
-else:
-    os.environ["OPENAI_API_KEY"] = user_api_key
+    else:
+        os.environ["OPENAI_API_KEY"] = user_api_key
 
-    script_docs = []
+        script_docs = []
 
-    def get_youtube_id(url):
-        video_id = None
-        match = re.search(r"(?<=v=)[^&#]+", url)
-        if match :
-            video_id = match.group()
-        else : 
-            match = re.search(r"(?<=youtu.be/)[^&#]+", url)
+        def get_youtube_id(url):
+            video_id = None
+            match = re.search(r"(?<=v=)[^&#]+", url)
             if match :
                 video_id = match.group()
-        return video_id
+            else : 
+                match = re.search(r"(?<=youtu.be/)[^&#]+", url)
+                if match :
+                    video_id = match.group()
+            return video_id
 
-    video_url = st.text_input(placeholder="Enter Youtube Video URL", label_visibility="hidden", label =" ")
-    if video_url :
-        video_id = get_youtube_id(video_url)
+        video_url = st.text_input(placeholder="Enter Youtube Video URL", label_visibility="hidden", label =" ")
+        if video_url :
+            video_id = get_youtube_id(video_url)
 
-        if video_id != "":
-            t = YouTubeTranscriptApi.get_transcript(video_id, languages=('en','fr','es', 'zh-cn', 'hi', 'ar', 'bn', 'ru', 'pt', 'sw' ))
-            finalString = ""
-            for item in t:
-                text = item['text']
-                finalString += text + " "
+            if video_id != "":
+                t = YouTubeTranscriptApi.get_transcript(video_id, languages=('en','fr','es', 'zh-cn', 'hi', 'ar', 'bn', 'ru', 'pt', 'sw' ))
+                finalString = ""
+                for item in t:
+                    text = item['text']
+                    finalString += text + " "
 
-            text_splitter = CharacterTextSplitter()
-            chunks = text_splitter.split_text(finalString)
+                text_splitter = CharacterTextSplitter()
+                chunks = text_splitter.split_text(finalString)
 
-            summary_chain = load_summarize_chain(OpenAI(temperature=0),
-                                            chain_type="map_reduce",verbose=True)
-            
-            summarize_document_chain = AnalyzeDocumentChain(combine_docs_chain=summary_chain)
+                summary_chain = load_summarize_chain(OpenAI(temperature=0),
+                                                chain_type="map_reduce",verbose=True)
+                
+                summarize_document_chain = AnalyzeDocumentChain(combine_docs_chain=summary_chain)
 
-            answer = summarize_document_chain.run(chunks)
+                answer = summarize_document_chain.run(chunks)
 
-            st.subheader(answer)
+                st.subheader(answer)
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    else:
+        # Password correct.
+        return True
+
+if check_password():
+    system_msg = ""
+    main()

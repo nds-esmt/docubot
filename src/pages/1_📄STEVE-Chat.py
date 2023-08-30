@@ -35,66 +35,98 @@ layout.show_header("PDF, TXT, CSV")
 
 user_api_key = utils.load_api_key()
 
-if not user_api_key:
-    layout.show_api_key_missing()
-else:
-    os.environ["OPENAI_API_KEY"] = user_api_key
+def main():
+    if not user_api_key:
+        layout.show_api_key_missing()
+    else:
+        os.environ["OPENAI_API_KEY"] = user_api_key
 
-    uploaded_file = utils.handle_upload(["pdf", "txt", "csv"])
+        uploaded_file = utils.handle_upload(["pdf", "txt", "csv"])
 
-    if uploaded_file:
+        if uploaded_file:
 
-        # Configure the sidebar
-        sidebar.show_options()
-        sidebar.about()
+            # Configure the sidebar
+            sidebar.show_options()
+            sidebar.about()
 
-        # Initialize chat history
-        history = ChatHistory()
-        try:
-            chatbot = utils.setup_chatbot(
-                uploaded_file, st.session_state["model"], st.session_state["temperature"]
-            )
-            st.session_state["chatbot"] = chatbot
+            # Initialize chat history
+            history = ChatHistory()
+            try:
+                chatbot = utils.setup_chatbot(
+                    uploaded_file, st.session_state["model"], st.session_state["temperature"]
+                )
+                st.session_state["chatbot"] = chatbot
 
-            if st.session_state["ready"]:
-                # Create containers for chat responses and user prompts
-                response_container, prompt_container = st.container(), st.container()
+                if st.session_state["ready"]:
+                    # Create containers for chat responses and user prompts
+                    response_container, prompt_container = st.container(), st.container()
 
-                with prompt_container:
-                    # Display the prompt form
-                    is_ready, user_input = layout.prompt_form()
+                    with prompt_container:
+                        # Display the prompt form
+                        is_ready, user_input = layout.prompt_form()
 
-                    # Initialize the chat history
-                    history.initialize(uploaded_file)
+                        # Initialize the chat history
+                        history.initialize(uploaded_file)
 
-                    # Reset the chat history if button clicked
-                    if st.session_state["reset_chat"]:
-                        history.reset(uploaded_file)
+                        # Reset the chat history if button clicked
+                        if st.session_state["reset_chat"]:
+                            history.reset(uploaded_file)
 
-                    if is_ready:
-                        # Update the chat history and display the chat messages
-                        history.append("user", user_input)
+                        if is_ready:
+                            # Update the chat history and display the chat messages
+                            history.append("user", user_input)
 
-                        old_stdout = sys.stdout
-                        sys.stdout = captured_output = StringIO()
+                            old_stdout = sys.stdout
+                            sys.stdout = captured_output = StringIO()
 
-                        output = st.session_state["chatbot"].conversational_chat(user_input)
+                            output = st.session_state["chatbot"].conversational_chat(user_input)
 
-                        sys.stdout = old_stdout
+                            sys.stdout = old_stdout
 
-                        history.append("assistant", output)
+                            history.append("assistant", output)
 
-                        # Clean up the agent's thoughts to remove unwanted characters
-                        thoughts = captured_output.getvalue()
-                        cleaned_thoughts = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', thoughts)
-                        cleaned_thoughts = re.sub(r'\[1m>', '', cleaned_thoughts)
+                            # Clean up the agent's thoughts to remove unwanted characters
+                            thoughts = captured_output.getvalue()
+                            cleaned_thoughts = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', thoughts)
+                            cleaned_thoughts = re.sub(r'\[1m>', '', cleaned_thoughts)
 
-                        # Display the agent's thoughts
-                        with st.expander("Display the agent's thoughts"):
-                            st.write(cleaned_thoughts)
+                            # Display the agent's thoughts
+                            with st.expander("Display the agent's thoughts"):
+                                st.write(cleaned_thoughts)
 
-                history.generate_messages(response_container)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+                    history.generate_messages(response_container)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    else:
+        # Password correct.
+        return True
+
+if check_password():
+    system_msg = ""
+    main()
