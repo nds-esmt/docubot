@@ -26,7 +26,7 @@ Layout = layout_module.Layout
 Utilities = utils_module.Utilities
 Sidebar = sidebar_module.Sidebar
 
-st.set_page_config(layout="wide", page_icon="💬", page_title="STEVE | DocBot")
+st.set_page_config(layout="wide", page_icon="💬", page_title="DocuBot")
 
 # Instantiate the main components
 layout, sidebar, utils = Layout(), Sidebar(), Utilities()
@@ -48,6 +48,9 @@ def main():
             # Configure the sidebar
             sidebar.show_options()
             sidebar.about()
+            sidebar.disclaimer()
+            sidebar.feedback()
+            
 
             # Initialize chat history
             history = ChatHistory()

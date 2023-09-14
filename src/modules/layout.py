@@ -8,7 +8,7 @@ class Layout:
         """
         st.markdown(
             f"""
-            <h1 style='text-align: center;'> Ask STEVE about your {types_files} files !</h1>
+            <h1 style='text-align: center;'> Ask DocuBot about your {types_files} files !</h1>
             """,
             unsafe_allow_html=True,
         )

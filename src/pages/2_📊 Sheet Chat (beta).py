@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 import streamlit as st
 from io import BytesIO
-from modules.steve_sheet.table_tool import PandasAgent
+from modules.sheet_chat.table_tool import PandasAgent
 from modules.layout import Layout
 from modules.utils import Utilities
 from modules.sidebar import Sidebar
@@ -17,7 +17,7 @@ def reload_module(module_name):
         importlib.reload(sys.modules[module_name])
     return sys.modules[module_name]
 
-table_tool_module = reload_module('modules.steve_sheet.table_tool')
+table_tool_module = reload_module('modules.sheet_chat.table_tool')
 layout_module = reload_module('modules.layout')
 utils_module = reload_module('modules.utils')
 sidebar_module = reload_module('modules.sidebar')
@@ -43,6 +43,8 @@ def main():
 
         if uploaded_file:
             sidebar.about()
+            sidebar.disclaimer()
+            sidebar.feedback()
             
             uploaded_file_content = BytesIO(uploaded_file.getvalue())
             if uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" or uploaded_file.type == "application/vnd.ms-excel":
